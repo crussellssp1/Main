@@ -12,7 +12,9 @@
  * Set NODE_USE_ENV_PROXY=0 in the environment to opt out.
  */
 import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
 
+const require = createRequire(import.meta.url);
 const [, , command = "dev", ...rest] = process.argv;
 
 const env = { ...process.env };
@@ -21,11 +23,28 @@ if (env.NODE_USE_ENV_PROXY === "0") delete env.NODE_USE_ENV_PROXY;
 // EnvHttpProxyAgent is flagged experimental and prints a warning on every boot.
 if (env.NODE_NO_WARNINGS === undefined) env.NODE_NO_WARNINGS = "1";
 
-const child = spawn(
-  process.platform === "win32" ? "next.cmd" : "next",
-  [command, ...rest],
-  { stdio: "inherit", env, shell: process.platform === "win32" }
-);
+/**
+ * Resolve Next's CLI entry point and run it with this same Node binary.
+ *
+ * Launching the `next` shim instead would depend on node_modules/.bin being on
+ * PATH and, on Windows, on a .cmd wrapper and a shell — both of which fail on
+ * machines with a restricted PowerShell execution policy. Resolving the JS
+ * entry point sidesteps the shell entirely on every platform.
+ */
+let nextCli;
+try {
+  nextCli = require.resolve("next/dist/bin/next");
+} catch {
+  console.error(
+    "Could not find Next.js. Run `npm install` in this folder first, then try again."
+  );
+  process.exit(1);
+}
+
+const child = spawn(process.execPath, [nextCli, command, ...rest], {
+  stdio: "inherit",
+  env,
+});
 
 child.on("exit", (code, signal) => {
   if (signal) process.kill(process.pid, signal);

@@ -1,10 +1,14 @@
 # TERMINAL
 
-A Bloomberg-style market terminal that runs on your own machine: a multi-source
-news wire, a quote board of your choosing, interactive charts, a rates and
-credit board, an economic calendar, and an in-panel article reader.
+A Bloomberg-style market terminal: a multi-source news wire, a quote board of
+your choosing, interactive charts, a rates and credit board, an economic
+calendar, and an in-panel article reader. Host it or run it locally.
 
 Every data source is free and requires no API key, account, or signup.
+
+> The two Orlando tourism workbooks in this repository predate the terminal and
+> are unrelated to it. The app deliberately occupies the repository root so
+> that hosting it requires no build configuration.
 
 ![Terminal layout](docs/screenshot.png)
 
@@ -24,12 +28,11 @@ Deploy to Vercel entirely through the browser. Free tier is sufficient.
 1. Go to [vercel.com](https://vercel.com) and sign up with **Continue with
    GitHub**.
 2. **Add New → Project**, then import this repository.
-3. Set **Root Directory** to `terminal`. This is the one setting that matters:
-   the app lives in a subfolder, and the build fails without it.
-4. Leave the framework preset (Next.js), build command, and output directory
-   at their detected defaults. There are no environment variables to set,
-   because no data source needs a key.
-5. **Deploy**, wait about two minutes, and open the URL it gives you.
+3. Change nothing. The app sits at the repository root specifically so that
+   Vercel's Next.js detection needs no configuration: no root directory, no
+   build command, no output directory, and no environment variables, because
+   no data source needs a key.
+4. **Deploy**, wait about two minutes, and open the URL it gives you.
 
 Every push to the branch redeploys automatically. To keep it private, use
 Vercel's Deployment Protection setting so only your account can open the URL.
@@ -37,7 +40,6 @@ Vercel's Deployment Protection setting so only your account can open the URL.
 ### Option B: run it locally
 
 ```bash
-cd terminal
 npm install
 npm run dev
 ```

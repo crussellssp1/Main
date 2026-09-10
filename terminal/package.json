@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "description": "Bloomberg-style market terminal: news wire, quote board, charts, rates/credit, economic calendar",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "node scripts/run.mjs dev -p 3000",
     "build": "next build",

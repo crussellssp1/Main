@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { envelope, TTL } from "@/lib/apiResponse";
 import { cached, isFresh, peek, put } from "@/lib/cache";
 import { getJson, pool } from "@/lib/http";
 import { SYMBOL_ALIASES } from "@/lib/sources";
 import type { ApiEnvelope, Quote } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+// One batch per twenty symbols plus throttled detail lookups.
+// The default serverless ceiling of 10s is not enough on a cold start.
+export const maxDuration = 20;
 
 /**
  * Quotes come from two upstream calls with very different costs.
@@ -211,5 +215,5 @@ export async function GET(req: NextRequest) {
     stale: servedFromFallback > 0,
     warnings,
   };
-  return NextResponse.json(body);
+  return envelope(body, { sMaxAge: TTL.quote });
 }

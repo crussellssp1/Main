@@ -14,6 +14,28 @@ The article reader, opened over the news wire:
 
 ## Running it
 
+Two options. Hosting it needs nothing installed on your machine; running it
+locally needs Node.
+
+### Option A: host it (no install, permanent URL)
+
+Deploy to Vercel entirely through the browser. Free tier is sufficient.
+
+1. Go to [vercel.com](https://vercel.com) and sign up with **Continue with
+   GitHub**.
+2. **Add New → Project**, then import this repository.
+3. Set **Root Directory** to `terminal`. This is the one setting that matters:
+   the app lives in a subfolder, and the build fails without it.
+4. Leave the framework preset (Next.js), build command, and output directory
+   at their detected defaults. There are no environment variables to set,
+   because no data source needs a key.
+5. **Deploy**, wait about two minutes, and open the URL it gives you.
+
+Every push to the branch redeploys automatically. To keep it private, use
+Vercel's Deployment Protection setting so only your account can open the URL.
+
+### Option B: run it locally
+
 ```bash
 cd terminal
 npm install
@@ -21,9 +43,7 @@ npm run dev
 ```
 
 Then open http://localhost:3000. Use `npm run build && npm start` for the
-faster production build.
-
-Requires Node 20 or newer (developed on Node 22).
+faster production build. Requires Node 20 or newer (developed on Node 22).
 
 ## Layout
 
@@ -121,6 +141,14 @@ from a batch endpoint every 15 seconds. Names, day ranges, 52-week ranges, and
 volume need one request per symbol, so they are cached for ten minutes and only
 a dozen are refreshed per cycle, with the charted symbol first in the queue.
 This keeps a 35-symbol board well under the rate limit.
+
+**Cached at the edge, not just in memory.** `lib/cache.ts` holds a TTL map that
+serves a single local process well, but on a serverless host each request can
+land on a cold instance with an empty map, which would hammer the keyless
+upstreams into a rate limit. Every API response therefore carries `s-maxage`
+and `stale-while-revalidate` (`lib/apiResponse.ts`), so one upstream fetch fans
+out to every viewer and every open tab, and a slow source never blocks a panel.
+Error responses are deliberately left uncached.
 
 **Failures are visible, never silent.** Each panel footer carries a health dot
 and the time of its last successful load. A blocked publisher, a rate-limited

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { envelope, TTL } from "@/lib/apiResponse";
 import { XMLParser } from "fast-xml-parser";
 import { cached } from "@/lib/cache";
 import { get, settle } from "@/lib/http";
@@ -7,6 +8,9 @@ import { clean } from "@/lib/text";
 import type { ApiEnvelope, NewsItem, NewsSource } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+// Fetches and parses up to twenty-five feeds.
+// The default serverless ceiling of 10s is not enough on a cold start.
+export const maxDuration = 30;
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -162,5 +166,5 @@ export async function GET(req: NextRequest) {
       .filter((r) => r.error)
       .map((r) => `${r.key}: ${r.error}`),
   };
-  return NextResponse.json(body);
+  return envelope(body, { sMaxAge: TTL.news });
 }

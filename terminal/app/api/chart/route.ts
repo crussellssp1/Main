@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { envelope, TTL } from "@/lib/apiResponse";
 import { cached } from "@/lib/cache";
 import { getJson } from "@/lib/http";
 import { SYMBOL_ALIASES } from "@/lib/sources";
 import type { ApiEnvelope, Candle, Series } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+// Single upstream request, but cold starts can be slow.
+// The default serverless ceiling of 10s is not enough on a cold start.
+export const maxDuration = 20;
 
 /** Interval Yahoo accepts for each range, and how long the result stays fresh. */
 const RANGE_SPEC: Record<string, { interval: string; ttlMs: number }> = {
@@ -107,7 +111,7 @@ export async function GET(req: NextRequest) {
       fetchedAt: Date.now(),
       stale,
     };
-    return NextResponse.json(body);
+    return envelope(body, { sMaxAge: TTL.chart });
   } catch (err) {
     return NextResponse.json(
       {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { envelope, TTL } from "@/lib/apiResponse";
 import { Readability } from "@mozilla/readability";
 import { JSDOM, VirtualConsole } from "jsdom";
 import { cached } from "@/lib/cache";
@@ -7,6 +8,9 @@ import { clean } from "@/lib/text";
 import type { ApiEnvelope, Article } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+// Fetches a full publisher page and runs Readability over it.
+// The default serverless ceiling of 10s is not enough on a cold start.
+export const maxDuration = 30;
 
 const MAX_PARAGRAPHS = 120;
 
@@ -107,7 +111,7 @@ export async function GET(req: NextRequest) {
       extract(parsedUrl.toString())
     );
     const body: ApiEnvelope<Article> = { ok: true, data: value, fetchedAt: Date.now() };
-    return NextResponse.json(body);
+    return envelope(body, { sMaxAge: TTL.article });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json(

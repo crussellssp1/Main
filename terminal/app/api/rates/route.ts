@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { envelope, TTL } from "@/lib/apiResponse";
 import { cached } from "@/lib/cache";
 import { get, settle } from "@/lib/http";
 import type {
@@ -10,6 +11,9 @@ import type {
 } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+// Fans out to the Treasury curve, twelve FRED series and six futures contracts.
+// The default serverless ceiling of 10s is not enough on a cold start.
+export const maxDuration = 60;
 
 /**
  * Treasury publishes the full daily par yield curve as keyless CSV, one file
@@ -240,5 +244,5 @@ export async function GET() {
     fetchedAt: Date.now(),
     warnings: notes,
   };
-  return NextResponse.json(body);
+  return envelope(body, { sMaxAge: TTL.rates });
 }
